@@ -1,11 +1,14 @@
+import { makeDefaultSuggestionBuilder } from '../Suggestor/Suggestor';
 import { DEFAULT_SYMBOLS } from '../TaskSerializer/DefaultTaskSerializer';
 import { StatusConfiguration } from '../StatusConfiguration';
 import { Status } from '../Status';
 import { DefaultTaskSerializer, type TaskSerializer } from '../TaskSerializer';
+import type { SuggestionBuilder } from '../Suggestor';
 import { DebugSettings } from './DebugSettings';
 import { StatusSettings } from './StatusSettings';
 import { Feature } from './Feature';
 import type { FeatureFlag } from './Feature';
+import { GlobalFilter } from './GlobalFilter';
 
 interface SettingsMap {
     [key: string]: string | boolean;
@@ -24,11 +27,17 @@ interface TaskFormat {
     displayName: string;
     /** {@link TaskSerializer} responsible for reading Tasks from text and writing them back into text */
     taskSerializer: TaskSerializer;
+    /** Function that generates Intellisense-like suggestions as a user is typing a Task */
+    buildSuggestions?: SuggestionBuilder;
 }
 
 /** Map of all defined {@link TaskFormat}s */
 export const TASK_FORMATS = {
-    tasksPluginEmoji: { displayName: 'Default', taskSerializer: new DefaultTaskSerializer(DEFAULT_SYMBOLS) },
+    tasksPluginEmoji: {
+        displayName: 'Default',
+        taskSerializer: new DefaultTaskSerializer(DEFAULT_SYMBOLS),
+        buildSuggestions: makeDefaultSuggestionBuilder(DEFAULT_SYMBOLS),
+    },
 } as const;
 
 export type TASK_FORMATS = typeof TASK_FORMATS; // For convenience to make some typing easier
@@ -62,7 +71,7 @@ export interface Settings {
 }
 
 const defaultSettings: Settings = {
-    globalFilter: '',
+    globalFilter: GlobalFilter.empty,
     removeGlobalFilter: false,
     taskFormat: 'tasksPluginEmoji',
     setCreatedDate: false,
